@@ -14,7 +14,6 @@ This package provides tools for analyzing social network positions and brokerage
 **Gould-Fernandez Brokerage:**
 - **Five brokerage roles**: Coordinator, Gatekeeper, Representative, Liaison, Cosmopolitan
 - **Group-based analysis**: Identify brokers between and within groups
-- **Modularity integration**: Validate group structure before analysis
 
 ## Installation
 
@@ -242,37 +241,6 @@ representative(br, 2)     # Representative role count
 coordinator(br, 2)        # Coordinator role count
 ```
 
-### Validating Group Structure with Modularity
-
-Before analyzing brokerage, validate that your groups have structural basis:
-
-```julia
-# Calculate brokerage with modularity validation
-br = brokerage(g, departments; compute_modularity=true)
-
-if br.modularity > 0.3
-    println("Strong group structure (Q = $(br.modularity))")
-    println("Brokerage analysis is meaningful")
-
-    # Identify key brokers
-    for i in 1:nv(g)
-        if total_brokerage(br, i) > 5
-            println("Node $i is a key broker")
-            println("  Coordinator: $(coordinator(br, i))")
-            println("  Liaison: $(liaison(br, i))")
-        end
-    end
-else
-    println("Weak group structure (Q = $(br.modularity))")
-    println("Consider alternative groupings")
-end
-```
-
-**Modularity interpretation:**
-- Q > 0.3: Strong group separation (brokerage analysis is meaningful)
-- 0.1 < Q < 0.3: Moderate separation (interpret with caution)
-- Q ≈ 0: No structural alignment (reconsider groups)
-
 ### Working with Different Group Types
 
 Groups can be specified as integers, strings, symbols, or dictionaries:
@@ -469,24 +437,23 @@ Calculate the indirect investment from node `i` to node `j` through mutual neigh
 
 **Returns:** `Float64` - Sum of indirect investments
 
-### `brokerage(g, groups; compute_modularity=false)`
+### `brokerage(g, groups)`
 
 Calculate Gould-Fernandez brokerage roles for all nodes.
 
 **Arguments:**
 - `g::AbstractGraph` - Network (directed or undirected)
 - `groups::Union{AbstractVector, AbstractDict}` - Group assignment for each node
-- `compute_modularity::Bool` - Optional keyword argument (default: `false`)
 
 **Returns:** `BrokerageResult` - Struct containing brokerage counts for all nodes
 
 **Example:**
 ```julia
 br = brokerage(g, ["Sales", "Sales", "Eng"])
-br = brokerage(g, [1, 1, 2]; compute_modularity=true)
+br = brokerage(g, [1, 1, 2])
 ```
 
-### `brokerage(g, groups, ego; compute_modularity=false)`
+### `brokerage(g, groups, ego)`
 
 Calculate brokerage for a single node (optimized).
 
@@ -494,9 +461,8 @@ Calculate brokerage for a single node (optimized).
 - `g::AbstractGraph` - Network
 - `groups::Union{AbstractVector, AbstractDict}` - Group assignment
 - `ego::Int` - Node to analyze
-- `compute_modularity::Bool` - Optional keyword argument (default: `false`)
 
-**Returns:** `NamedTuple` with fields: `coordinator`, `gatekeeper`, `representative`, `liaison`, `cosmopolitan`, `total`, `modularity`
+**Returns:** `NamedTuple` with fields: `coordinator`, `gatekeeper`, `representative`, `liaison`, `cosmopolitan`, `total`
 
 **Example:**
 ```julia
@@ -536,7 +502,6 @@ The test suite includes:
 - Mathematical properties (symmetry, constraint decomposition)
 - Brokerage role classification and validation
 - Integration tests with real networks (Karate Club)
-- Modularity validation
 
 ## References
 

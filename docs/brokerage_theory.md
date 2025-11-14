@@ -1,8 +1,10 @@
 # Gould-Fernandez Brokerage: Theoretical Foundation
 
-**Version:** 1.0
+**Version:** 1.1
 **Date:** 2025-01-14
 **Package:** NetworkBrokerage.jl
+
+**Update Note:** Modularity integration has been removed from the brokerage implementation. The sections on modularity validation remain for reference but are no longer part of the package API. Users interested in assessing group structure should calculate modularity separately using `Graphs.modularity()`.
 
 ---
 

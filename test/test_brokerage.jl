@@ -323,39 +323,6 @@ using NetworkBrokerage
         @test total_brokerage(br2, 2) == 0
     end
 
-    @testset "Modularity integration" begin
-        # Test modularity calculation
-        g = DiGraph(6)
-        # Create two groups with strong internal connections
-        add_edge!(g, 1, 2)
-        add_edge!(g, 2, 3)
-        add_edge!(g, 3, 1)
-        add_edge!(g, 4, 5)
-        add_edge!(g, 5, 6)
-        add_edge!(g, 6, 4)
-        # Bridge between groups
-        add_edge!(g, 3, 4)
-
-        groups = [1, 1, 1, 2, 2, 2]
-
-        br = brokerage(g, groups; compute_modularity=true)
-
-        @test br.modularity !== nothing
-        @test br.modularity isa Float64
-        @test br.modularity >= -1.0
-        @test br.modularity <= 1.0
-
-        # Test with non-integer groups
-        groups_str = ["A", "A", "A", "B", "B", "B"]
-        br_str = brokerage(g, groups_str; compute_modularity=true)
-        @test br_str.modularity !== nothing
-        @test br_str.modularity isa Float64
-
-        # Test without modularity
-        br_no_mod = brokerage(g, groups; compute_modularity=false)
-        @test br_no_mod.modularity === nothing
-    end
-
     @testset "BrokerageResult display" begin
         g = DiGraph(3)
         add_edge!(g, 1, 2)
@@ -372,14 +339,6 @@ using NetworkBrokerage
         @test occursin("BrokerageResult", output)
         @test occursin("Coordinator:", output)
         @test occursin("Representative:", output)
-
-        # Test with modularity
-        br_mod = brokerage(g, groups; compute_modularity=true)
-        io = IOBuffer()
-        show(io, br_mod)
-        output = String(take!(io))
-
-        @test occursin("Modularity:", output)
     end
 
     @testset "Accessor functions" begin

@@ -16,7 +16,6 @@ Parametric type that preserves the element type of group assignments for type st
 - `cosmopolitan::Vector{Int}`: Cosmopolitan counts (all groups distinct)
 - `total::Vector{Int}`: Total brokerage counts for each node
 - `groups::Vector{T}`: Group assignments used in calculation (type-stable)
-- `modularity::Union{Float64, Nothing}`: Newman's modularity Q (if computed)
 
 # Examples
 ```julia
@@ -52,11 +51,10 @@ struct BrokerageResult{T}
     cosmopolitan::Vector{Int}
     total::Vector{Int}
     groups::Vector{T}
-    modularity::Union{Float64, Nothing}
 end
 
 """
-    BrokerageResult(n::Int, groups::AbstractVector{T}; modularity=nothing) where T
+    BrokerageResult(n::Int, groups::AbstractVector{T}) where T
 
 Construct a BrokerageResult with all counts initialized to zero.
 
@@ -65,7 +63,6 @@ The element type T of the groups vector is preserved for type stability.
 # Arguments
 - `n::Int`: Number of nodes in graph
 - `groups::AbstractVector{T}`: Group assignments of element type T
-- `modularity`: Optional modularity value (default: nothing)
 
 # Returns
 `BrokerageResult{T}` where T is the element type of groups
@@ -81,7 +78,7 @@ br = BrokerageResult(3, [1, 2, 3])
 typeof(br)  # BrokerageResult{Int64}
 ```
 """
-function BrokerageResult(n::Int, groups::AbstractVector{T}; modularity=nothing) where T
+function BrokerageResult(n::Int, groups::AbstractVector{T}) where T
     BrokerageResult{T}(
         zeros(Int, n),
         zeros(Int, n),
@@ -89,8 +86,7 @@ function BrokerageResult(n::Int, groups::AbstractVector{T}; modularity=nothing) 
         zeros(Int, n),
         zeros(Int, n),
         zeros(Int, n),
-        collect(groups),
-        modularity
+        collect(groups)
     )
 end
 
@@ -170,18 +166,5 @@ function Base.show(io::IO, br::BrokerageResult)
     println(io, "  Representative:  $total_rep")
     println(io, "  Liaison:         $total_liaison")
     println(io, "  Cosmopolitan:    $total_cosmo")
-    println(io, "  Total:           $total_all")
-
-    if br.modularity !== nothing
-        Q = br.modularity
-        # Interpret modularity strength
-        interpretation = if Q > 0.3
-            "strong group separation"
-        elseif Q > 0.1
-            "moderate group separation"
-        else
-            "weak or no group separation"
-        end
-        print(io, "  Modularity:      $(round(Q, digits=3)) ($interpretation)")
-    end
+    print(io, "  Total:           $total_all")
 end

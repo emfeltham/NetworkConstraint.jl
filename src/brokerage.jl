@@ -5,7 +5,7 @@ Implements the five-role brokerage typology from Gould & Fernandez (1989).
 """
 
 """
-    brokerage(g::AbstractGraph, groups::Union{AbstractVector, AbstractDict}; compute_modularity=false)
+    brokerage(g::AbstractGraph, groups::Union{AbstractVector, AbstractDict})
 
 Calculate Gould-Fernandez brokerage roles for all nodes in a network.
 
@@ -27,14 +27,12 @@ The five brokerage roles are classified by group membership:
   - If Vector: `groups[i]` is the group of node i
   - If Dict: `groups[i]` is the group of node i (using vertex IDs as keys)
   - Groups can be any type (Int, String, Symbol, etc.)
-- `compute_modularity::Bool`: If true, calculate Newman's modularity Q (default: false)
 
 # Returns
 `BrokerageResult` struct containing:
 - Counts for each role type per node
 - Total brokerage counts
 - Group assignments
-- Modularity value (if computed)
 
 # Throws
 - `ArgumentError` if group assignment doesn't match graph structure
@@ -53,12 +51,6 @@ println(br)  # Shows summary of brokerage roles
 # Access individual counts
 representative(br, 2)  # Node 2's representative count
 
-# With modularity validation
-br = brokerage(g, groups; compute_modularity=true)
-if br.modularity > 0.3
-    println("Strong group structure detected")
-end
-
 # Using named groups
 departments = ["Sales", "Sales", "Engineering", "Engineering", "HR"]
 br = brokerage(g, departments)
@@ -74,10 +66,7 @@ Gould, R. V., & Fernandez, R. M. (1989). Structures of mediation:
 A formal approach to brokerage in transaction networks.
 Sociological Methodology, 19, 89-126.
 """
-function brokerage(
-    g::AbstractGraph, groups::Union{AbstractVector, AbstractDict};
-    compute_modularity::Bool=false
-)
+function brokerage(g::AbstractGraph, groups::Union{AbstractVector, AbstractDict})
     # Validate inputs
     validate_groups(g, groups)
 
@@ -161,39 +150,11 @@ function brokerage(
                         br.cosmopolitan[ego])
     end
 
-    # Optional: Calculate modularity
-    if compute_modularity
-        # Convert groups to integers if needed
-        if eltype(groups_vec) <: Integer
-            int_groups = Vector{Int}(groups_vec)
-        else
-            int_groups = groups_to_integer(groups_vec)
-        end
-
-        # Calculate modularity using Graphs.jl built-in function
-        Q = modularity(g, int_groups)
-
-        # Create new result with modularity
-        # Use typeof(br) to preserve the parametric type T
-        T = eltype(br.groups)
-        return BrokerageResult{T}(
-            br.coordinator,
-            br.gatekeeper,
-            br.representative,
-            br.liaison,
-            br.cosmopolitan,
-            br.total,
-            br.groups,
-            Q
-        )
-    end
-
     return br
 end
 
 """
-    brokerage(g::AbstractGraph, groups::Union{AbstractVector, AbstractDict}, ego::Int;
-              compute_modularity=false) -> NamedTuple
+    brokerage(g::AbstractGraph, groups::Union{AbstractVector, AbstractDict}, ego::Int) -> NamedTuple
 
 Calculate brokerage roles for a single node (optimization for individual queries).
 
@@ -201,7 +162,6 @@ Calculate brokerage roles for a single node (optimization for individual queries
 - `g::AbstractGraph`: Network
 - `groups`: Group assignment
 - `ego::Int`: Node to calculate brokerage for
-- `compute_modularity::Bool`: If true, calculate modularity (default: false)
 
 # Returns
 NamedTuple with fields:
@@ -211,7 +171,6 @@ NamedTuple with fields:
 - `liaison::Int`: Liaison count
 - `cosmopolitan::Int`: Cosmopolitan count
 - `total::Int`: Sum of all roles
-- `modularity::Union{Float64, Nothing}`: Modularity if computed
 
 # Throws
 - `ArgumentError` if group assignment invalid or ego not in graph
@@ -229,8 +188,7 @@ println("Node 2 has \$(result.total) brokerage triads")
 println("  Representative: \$(result.representative)")
 ```
 """
-function brokerage(g::AbstractGraph, groups::Union{AbstractVector, AbstractDict}, ego::Int;
-                   compute_modularity::Bool=false)
+function brokerage(g::AbstractGraph, groups::Union{AbstractVector, AbstractDict}, ego::Int)
     # Validate inputs
     validate_groups(g, groups)
 
@@ -308,26 +266,12 @@ function brokerage(g::AbstractGraph, groups::Union{AbstractVector, AbstractDict}
 
     total_count = coord_count + gate_count + rep_count + liaison_count + cosmo_count
 
-    # Optional: Calculate modularity for the entire graph
-    mod_val = nothing
-    if compute_modularity
-        # Convert groups to integers if needed
-        if eltype(groups_vec) <: Integer
-            int_groups = Vector{Int}(groups_vec)
-        else
-            int_groups = groups_to_integer(groups_vec)
-        end
-
-        mod_val = modularity(g, int_groups)
-    end
-
     return (
         coordinator = coord_count,
         gatekeeper = gate_count,
         representative = rep_count,
         liaison = liaison_count,
         cosmopolitan = cosmo_count,
-        total = total_count,
-        modularity = mod_val
+        total = total_count
     )
 end
